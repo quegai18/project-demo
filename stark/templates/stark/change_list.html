@@ -1,0 +1,128 @@
+{% extends "rbac/layout.html" %}
+{% load static_menu %}
+{% block css %}
+    <style>
+        .search-group {
+            padding: 5px 10px;
+        }
+
+        .search-group .row .whole {
+            min-width: 40px;
+            float: left;
+            display: inline-block;
+            padding: 5px 0 5px 8px;
+            margin: 3px;
+            font-weight: bold;
+            width: 65px;
+        }
+
+        .search-group .row .others {
+            padding-left: 60px;
+        }
+
+        .search-group .row a {
+            display: inline-block;
+            padding: 5px 8px;
+            margin: 3px;
+            border: 1px solid #d4d4d4;
+
+        }
+
+        .search-group .row a {
+            display: inline-block;
+            padding: 5px 8px;
+            margin: 3px;
+            border: 1px solid #d4d4d4;
+        }
+
+        .search-group a.active {
+            color: #fff;
+            background-color: #337ab7;
+            border-color: #2e6da4;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="luffy-container">
+        {% if search_group_row_list %}
+            <div class="panel panel-default">
+                <div class="panel-heading" style="cursor: pointer">
+                    <i class="fa fa-filter" aria-hidden="true"></i>&nbsp;快速筛选
+                </div>
+                <div class="panel-body">
+                    <div class="search-group">
+                        {% for row in search_group_row_list %}
+                            {#row的数据类型可能是元祖或者Queryset#}
+                            <div class="row">
+                                {% for field in row %}
+                                    {{ field|safe }}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if search_list %}
+            <div class="pull-right" style="margin-bottom: 10px">
+                <form action="" method="get" class="form-inline">
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="keyword" value="{{ current_keyword }}"
+                               placeholder="关键字搜索">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+        <form action="" method="post">
+            {% csrf_token %}
+            {% if add_btn %}
+                {{ add_btn }}
+            {% endif %}
+            {% if action_dict %}
+                <div class="btn-group" style="margin: 5px 0">
+                    <div class="pull-left">
+                        <div class="form-inline">
+                            <div class="form-group">
+                                <select name="batch_operation" id="" class="form-control">
+                                    <option value="">请选择批量操作</option>
+                                    {% for func_name, func_text in action_dict.items %}
+                                        <option value="{{ func_name }}" class="text-center">{{ func_text }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="submit" value="执行" class="btn btn-primary">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <table class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th class="text-center">#</th>
+                    {% for item in header_list %}
+                        <th class="text-center">{{ item }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for row_list in data_list %}
+                    <tr>
+                        <td class="text-center">{{ forloop.counter }}</td>
+                        {% for data in row_list %}
+                            <td class="text-center">{{ data }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </form>
+        <nav aria-label="...">
+            <ul class="pagination">
+                {{ pager.page_html }}
+            </ul>
+        </nav>
+    </div>
+{% endblock %}

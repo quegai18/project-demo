@@ -1,0 +1,172 @@
+{% extends "rbac/layout.html" %}
+{% load static_menu %}
+{% block css %}
+    <style>
+        a{
+            cursor: pointer;
+        }
+        tr.active{
+            border-left: 3px solid #fdc00f;
+        }
+
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="col-md-3 ">
+        <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading">
+                <i class="fa fa-book" aria-hidden="true"></i>&nbsp;&nbsp;一级菜单
+                {% if request|has_permissions:"rbac:menu_add" %}
+                    <a href="{% memory_url request 'rbac:menu_add' %}" class="right btn btn-xs btn-success" style="padding: 2px 8px;margin: -3px;">
+                        <i class="fa fa-edit" aria-hidden="true"></i>
+                        &nbsp;新建&nbsp;&nbsp;
+                    </a>
+                {% endif %}
+            </div>
+            <!-- Table -->
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>名称</th>
+                    <th>图标</th>
+                    <th>选项</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for menu in menu_query %}
+                    <tr class="{% if current_menu_id == menu.id|safe %}active{% endif %}">
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>
+                            <a href="?mid={{ menu.id }}">{{ menu.title }}</a>
+                        </td>
+                        <td><i class="fa {{ menu.icon }}" aria-hidden="true"></i></td>
+                        <td>
+                            {% if request|has_permissions:"rbac:menu_edit" %}
+                                <a style="color: #333333;" href="{% memory_url request 'rbac:menu_edit' pk=menu.id %}">
+                                    <i class="fa fa-edit" aria-hidden="true"></i></a>
+                            {% endif %}
+                            |
+                            {% if request|has_permissions:"rbac:menu_del" %}
+                                <a style="color: #d9534f;" href="{% memory_url request 'rbac:menu_del' pk=menu.id %}">
+                                    <i class="fa fa-trash-o"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-4 ">
+        <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading">
+                <i class="fa fa-cube" aria-hidden="true"></i>&nbsp;&nbsp;二级菜单
+                {% if request|has_permissions:"rbac:sec_menu_add" %}
+                    {% if current_menu_id %}
+                    <a href="{% memory_url request 'rbac:sec_menu_add' menu_id=current_menu_id %}" class="right btn btn-xs btn-success" style="padding: 2px 8px;margin: -3px;">
+                        <i class="fa fa-edit" aria-hidden="true"></i>
+                        &nbsp;新建&nbsp;&nbsp;
+                    </a>
+                {% endif %}
+                {% endif %}
+            </div>
+            <!-- Table -->
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>URL & Code</th>
+                    <th>选项</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for menu in second_menu %}
+                    <tr class="{% if current_second_menu_id == menu.id|safe %}active{% endif %}">
+                        <td><a href="?mid={{ current_menu_id }}&sid={{ menu.id }}">{{ menu.title }}</a></td>
+                        <td>
+                            URL: {{ menu.url }}
+                        </td>
+                        <td rowspan="2" class="text-center">
+                            {% if request|has_permissions:"rbac:sec_menu_edit" %}
+                                <a style="color: #333333;" href="{% memory_url request 'rbac:sec_menu_edit' pk=menu.id %}">
+                                    <i class="fa fa-edit" aria-hidden="true"></i></a>
+                            {% endif %}
+                            |
+                            {% if request|has_permissions:"rbac:sec_menu_del" %}
+                                <a style="color: #d9534f;" href="{% memory_url request 'rbac:sec_menu_del' pk=menu.id %}">
+                                    <i class="fa fa-trash-o"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr class="{% if current_second_menu_id == menu.id|safe %}active{% endif %}">
+                        <td>图标:&nbsp;&nbsp;<i class="fa {{ menu.icon }}"></i></td>
+                        <td colspan="2" style="border-top: 0">Code: {{ menu.name }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-5 ">
+        <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading">
+                <i class="fa fa-cubes" aria-hidden="true"></i>&nbsp;&nbsp;权限列表
+                <div class="btn-group right">
+                    {% if request|has_permissions:"rbac:permissions_add" %}
+                        {% if current_second_menu_id %}
+                            <a href="{% memory_url request 'rbac:permissions_add' sid=current_second_menu_id %}" class="btn btn-xs btn-success" style="padding: 2px 8px;margin: -3px;">
+                                <i class="fa fa-edit" aria-hidden="true"></i>
+                                &nbsp;新建&nbsp;&nbsp;
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                    {% if request|has_permissions:"rbac:multi_permissions_list" %}
+                        <a href="{% memory_url request 'rbac:multi_permissions_list' %}" class="btn btn-xs btn-primary" style="padding: 2px 8px;margin: -3px;">
+                            <i class="fa fa-reply" aria-hidden="true"></i>
+                            &nbsp;批量管理&nbsp;&nbsp;
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Table -->
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>URL & Code</th>
+                    <th>选项</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for menu in permissions %}
+                    <tr>
+                        <td>{{ menu.title }}</td>
+                        <td>
+                            URL: {{ menu.url }}
+                        </td>
+                        <td rowspan="2" class="text-center">
+                            {% if request|has_permissions:"rbac:permissions_edit" %}
+                                <a style="color: #333333;" href="{% memory_url request 'rbac:permissions_edit' pk=menu.id %}">
+                                    <i class="fa fa-edit" aria-hidden="true"></i></a>
+                            {% endif %}
+                            |
+                            {% if request|has_permissions:"rbac:permissions_del" %}
+                                <a style="color: #d9534f;" href="{% memory_url request 'rbac:permissions_del' pk=menu.id %}">
+                                    <i class="fa fa-trash-o"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border-top: 0"></td>
+                        <td colspan="2" style="border-top: 0">Code: {{ menu.name }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

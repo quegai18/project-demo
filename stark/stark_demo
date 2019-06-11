@@ -1,0 +1,151 @@
+这是一份stark组件的应用示范代码，可以在需要使用时直接复制进自己的项目中，文件名固定:stark.py
+具体的功能配置浏览当前文章就可以
+
+# -*- coding: utf-8 -*-
+# __author__ = "LiuWei"
+# Email: 512774725@qq.com
+
+from stark.service.start_assembly import site
+from stark.service.start_assembly import StarkHandler
+from app01 import models
+from django import forms
+
+
+class MyModelForm(forms.ModelForm):
+    test_field = forms.CharField()      # 这是增加一个test_field字段
+
+    class Meta:
+        model = models.Customer
+        fields = []                   # 这里用于控制减少字段，如果被减少的字段在保存时需要设置一个默认值，可以通过"ModelHandler"中复写save()方法来解决
+
+
+class DepartHandler(StarkHandler):
+    """
+    为Depart表自动生成增删改查URL和视图函数
+    """
+    list_display = [
+        "id",
+        "title",
+        StarkHandler.display_operation,
+    ]
+    search_list = ["title__contains",]
+
+
+class CustomerHandler(StarkHandler):
+    """
+    下面所有被注释的方法都不要删除，都有特定的功能，如果需要使用就解除注释编写逻辑，不需要再删除
+    """
+
+    # def multi_delete(self, request):
+    #     """这是一段示范代码，用于示范添加一个自定义的批量操作选项"""
+    #     pk_list = request.POST.getlist("pk")                    # 通过getlist把页面传来的所有被选中的数据ID都获取到
+    #     self.model_class.objects.filter(id__in=pk_list).delete()
+
+    # multi_delete.text = "批量删除"  # 给这个函数赋一个中文名字，方便在页面进行展示
+
+    # 用于自定义需要展示的字段
+    # StarkHandler.display_operation,是一个默认的列，头部是"操作"，内容是修改和删除按钮，指向的URL是根据反向解析当前表中的修改、删除两个URL的别名来生成的
+    # StarkHandler.get_choice_text是一个用于展示choices类型字段的列，需要参数("字段中文别名", "字段名"),表头是字段别名，表体是数据的中文解释
+    # StarkHandler.display_checkbox是展示用于批量操作选框的列
+    list_display = [
+        StarkHandler.display_checkbox,
+        "name",
+        StarkHandler.get_choice_text("性别", "gender"),
+        "age",
+        "email",
+        "depart",
+        StarkHandler.display_operation,
+    ]
+    # has_add_btn = True                                            # 控制是否给用户展示添加按钮
+    # per_page_count = 10                                           # 复写这个参数来控制当前表每页显示的数据量，基类中默认为10
+    # model_form_class = None                                       # 这里可以是一个自定义的modelform类，用于替换组件中默认的modelform，如果希望当期表的modelform增加或减少字段，就设置这个参数
+    # model_form_class的参考请在当前文件中搜索"MyModelForm"
+    search_list = ["name__contains", "email__contains"]        # 为当前表配置搜索的字段，_contains表示或的意思
+    # action_list = [multi_delete, ]                                 # 表展示界面的自定义批量操作，里面放的是实现功能的函数，例如multi_delete，默认存在的有批量删除
+    from stark.service.start_assembly import SearchOption                   # 这是一个用于组合搜索的封装类
+    search_group = [                                                # 配置进行组合搜索的字段，默认为空
+        SearchOption("gender", is_multi=True),                                          # 这是都用默认设置的展示(基本足够了)，is_choices设置该字段是否支持多选
+        # SearchOption("gender", text_func=lambda field_obj:field_obj[1] + "666"),          # 这是一个自定义文本展示前缀的示例
+        # SearchOption("gender", text_func=lambda field_obj:field_obj.title),               # 这是一个自定义文本展示的示例
+        SearchOption("depart", db_condition={"id__gt": 0}),      # 这里就是举例带条件(要求ID大于5)的去获取进行组合搜索字段的数据
+    ]
+
+    # def save(self, form, is_update=False):
+    #     """
+    #     如果自定义的modelform类中有没有展示的字段，但是在添加或者修改记录时需要这个字段，这里就用来给这些字段
+    #     添加默认值，防止其报错，开发者只需要在对应的"ModelHandler"内复写该方法然后自己设置默认值即可。
+    #     :param form:当前使用的form对象
+    #     :param is_update:判断是添加操作还是修改操作
+    #     :return:
+    #     """
+    #     form.instance."field" = "value"           # 这里就可以为没展示的字段设置默认值
+    #     form.save()
+
+    # def get_add_btn(self):
+    #     """
+    #     通过该方法可以进行权限控制，判断来获取添加按钮
+    #     :return:
+    #     """
+    #     if self.has_add_btn:
+    #         add_btn = mark_safe("""
+    #         <a class="btn btn-default" href="#">
+    #             <i class="fa fa-plus-square" aria-hidden="true"></i> 添加数据
+    #         </a>
+    #         """)
+    #         return add_btn
+    #     return None
+
+    # def display_operation(self, obj=None, is_header=None):
+    #     """
+    #     如果有ForeignKey关联字段也需要放在list_display中进行显示，有两个办法
+    #         - 在关联表内设置 __str__方法
+    #         - 使用这个函数来实现
+    #     :param obj: 当前记录的对象
+    #     :param is_header: 判断内容是放在表头还是在表内
+    #     :return:
+    #     """
+    #     if is_header:
+    #         return verbose_name(字段的别名)
+    #     return obj.需要展示的字段内的数据
+
+    # def get_list_display(self):
+    #     """
+    #     这里可以写上业务逻辑来根据用户的权限高低判断需要展示当前表的哪些字段
+    #     :return:[]
+    #     """
+    #     return:[]
+
+    # def get_urls(self):
+    #     """
+    #     这里可以为当前表设定需要减少的url，默认的有4个(增删改查)
+    #     patterns = [
+    #         url("^list/$", self.changelist_view, name=self.get_list_url_name),
+    #         url("^add/$", self.add_view, name=self.get_add_url_name),
+    #         url("^edit/(\d+)/$", self.edit_view, name=self.get_edit_url_name),
+    #         url("^del/(\d+)/$", self.delete_view, name=self.get_delete_url_name),
+    #     ]
+    #     :return:patterns
+    #     """
+    #     return []
+
+    # def extra_urls(self):
+    #     """
+    #     这里可以为当前表设定需要增加的url
+    #     注意：加URL的同时要在这里写好视图函数 def test_view(self, request):pass
+    #     patterns = [
+    #         url("^test/$", self.test_view, name=URL别名),
+    #     ]
+    #     :return:patterns
+    #     """
+    #     return []
+
+
+"""
+注册时需要传入的参数：
+    - 表模型：models.Customer
+    - 自定义的表操作类：CustomerHandler
+    - 自定义的需要加到自动生成的URL中的前缀：prev
+"""
+# 如果不想自定制，就不用传值自定义的handler类了
+site.register(models.Depart, DepartHandler)                                                         # 把Depart类注册到stark中
+site.register(models.Customer, CustomerHandler, prev=None)                                         # 把Customer类注册到stark中

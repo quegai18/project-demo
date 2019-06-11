@@ -1,0 +1,63 @@
+RBAC组件使用文档
+
+1. 将RBAC的APP包拷贝到业务项目中
+2. 将RBAC/migrations目录下的数据库迁移记录清空，保留 __init__.py 文件
+3. 进行业务开发
+    3.1 业务APP的用户表与RBAC组件中的用户表对接：
+        - 方式一：使用 OneToOneField() 关联组件中的用户表，拆分成两张表来使用，基本不用改动RBAC中的原代码。
+        - 方式二：
+            - 业务表结构中的用户表需要继承RBAC组件中的UserInfo表
+            - 去掉UserInfo表中role字段的to="Role"的双引号(需要把Role表放到UserInfo表的上面)
+            - 去掉UserInfo表中class Meta类的注释
+            - 在/rbac/admin.py中删除admin.site.register(UserInfo)，去掉RBAC中UserInfo表的注册
+            - 注释掉RBAC组件中跟用户管理有关的所有URL，把对于用户的操作放到业务APP的用户表中进行
+            - 将业务APP中用户表的路径写到配置文件，例：RBAC_USER_MODEL_CLASS = "rbac.models.UserInfo"
+            - 如果要使用RBAC中的页面模板`layout.html`，则需要将模板中的`{% mulit_menu_func request %}`菜单栏和`{% nav_menu_func request %}`导航条注释掉，在业务开发完成后上线之前再重新启用
+        - 如果需要给菜单添加其他图标选项，请在路径`/rbac/static/rbac/icon.py`中进行修改
+    3.2 业务开发时的注意点
+        - 将所有的路由URL都设置name或者namespace，用于反向生成URL和粒度控制到按钮级别的权限控制
+        - 在根路由中添加rbac的路由分发
+            url(r"^rbac/", include("rbac.urls", namespace="rbac"))
+4. 进行权限信息的录入
+    - 登录rbac提供的地址进行权限分配
+5. 进行登录逻辑的编写
+    - rbac组件中已有一个登录demo，如需修改自行调整，但一定要在里面做权限信息的初始化
+    - 设置权限初始化相关配置(settings.py)
+		PERMISSION_SESSION_KEY = "permission_url_list"  # session中保存权限URL列表的key
+		MENU_SESSION_KEY = "permission_menu_list"       # session中保存菜单列表的key
+	- 编写index首页逻辑，同时设置需要登录但是不需要权限的列表(settings.py)
+	    NO_PERMISSION_LIST = [                  # 需要登录但是不需要权限的URL
+            "/rbac/logout/",
+            "/rbac/index/",
+        ]
+6. 进行权限管理
+    - 把RBAC中的页面模板`layout.html`，则需要将模板中的`{% mulit_menu_func request %}`菜单栏和`{% nav_menu_func request %}`导航条注释去掉
+    - 应用中间件，settings.MIDDLEWARE中加入'rbac.middleware.rbac.RbacMiddleware'，对用户进行权限初始化
+    - 加入白名单(settings.py)
+		VAILD_URL_LIST = [                       # 这是一个权限URL白名单（正则）
+		    "/rbac/login/",
+		    "/admin/.*",
+		]
+	- 设置提取权限时的白名单(settings.py)
+		EXCLUDE_URL = [
+		    "/admin/.*",
+		]
+7. 总结：
+    希望在任意系统中都能应用该组件
+    - 用户登录 + 用户注销 + 用户首页 + 业务逻辑
+    - 项目业务逻辑开发
+        注意：开发时灵活的去设置layout.html中的两个inclustion_tag(动态菜单和动态导航条)
+    - 权限信息的录入
+    - 配置文件
+        - installAPP 注册RBAC组件
+        - 中间件的设置
+        - 自定义用户表的路径
+        - 菜单和权限在session中储存的key
+        - 白名单
+        - 需要登录但是无需权限的URL列表
+        - 自动发现路由功能中需要排序的URL列表
+8. 粒度控制到按钮级别的控制
+    {% if request|has_permission "按钮的路由别名" %}
+        把按钮放在这
+    {% endif %}
+

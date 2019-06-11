@@ -1,0 +1,54 @@
+{% extends "rbac/layout.html" %}
+{% load static_menu %}
+{% block content %}
+    <div class="luffy-container">
+        <div class="btn-group" style="margin: 5px 0">
+            {% if request|has_permissions:"rbac:user_add" %}
+                <a class="btn btn-default" href="{% memory_url request 'rbac:user_add' %}">
+                    <i class="fa fa-plus-square" aria-hidden="true"></i> 添加用户
+                </a>
+            {% endif %}
+            <a class="btn btn-default" href="#">
+                <i class="fa fa-file-excel-o" aria-hidden="true"></i> 批量导入
+            </a>
+        </div>
+        <table class="table table-bordered table-hover">
+            <thead>
+            <tr>
+                <th>序号</th>
+                <th>用户名</th>
+                <th>邮箱</th>
+                {% if request|has_permissions:"rbac:user_reset" %}
+                    <th>重置密码</th>
+                {% endif %}
+                {% if request|has_permissions:"rbac:user_edit" or request|has_permissions:"rbac:user_del" %}
+                    <th>操作</th>
+                {% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in user_queryset %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ row.username }}</td>
+                    <td>{{ row.email }}</td>
+                    {% if request|has_permissions:"rbac:user_reset" %}
+                        <td><a href="{% memory_url request 'rbac:user_reset' pk=row.id %}" style="cursor: pointer">重置密码</a></td>
+                    {% endif %}
+                    <td>
+                        {% if request|has_permissions:"rbac:user_edit" %}
+                            <a style="color: #333333;" href="{% memory_url request 'rbac:user_edit' pk=row.id %}">
+                                <i class="fa fa-edit" aria-hidden="true"></i></a>
+                        {% endif %}
+                        |
+                        {% if request|has_permissions:"rbac:user_del" %}
+                            <a style="color: #d9534f;" href="{% memory_url request 'rbac:user_del' pk=row.id %}"><i
+                                    class="fa fa-trash-o"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends "rbac/layout.html" %}
+{% load static_menu %}
+{% block css %}
+    <style>
+        .tips{
+            font-size: 16px;
+            color: #919191;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <form action="?type=add" method="post">
+        {% csrf_token %}
+        {{ add_forms.management_form }}
+        <div class="luffy-container">
+        <div class="col-md-12 ">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">
+                    <i class="fa fa-th-list" aria-hidden="true"></i>&nbsp;&nbsp;待新建的权限列表
+                    <button class="right btn btn-xs btn-primary" style="padding: 2px 8px;margin: -3px;">
+                        <i class="fa fa-save" aria-hidden="true"></i>
+                        &nbsp;一键新建&nbsp;&nbsp;
+                    </button>
+                </div>
+                <div class="panel-body tips">
+                        PS:项目中存在，数据库中不存在的URL
+                </div>
+                <!-- Table -->
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>名称</th>
+                        <th>URL</th>
+                        <th>Code</th>
+                        <th>所属菜单</th>
+                        <th>父权限</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for form in add_forms %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            {% for field in form %}
+                                <td>{{ field }} <span style="color:red;">{{ field.errors.0 }}</span></td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </form>
+
+    <div class="luffy-container">
+        <div class="col-md-12 ">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">
+                    <i class="fa fa-th-list" aria-hidden="true"></i>&nbsp;&nbsp;待删除的权限列表
+                    <a href="#" class="right btn btn-xs btn-danger" style="padding: 2px 8px;margin: -3px;">
+                        <i class="fa fa-edit" aria-hidden="true"></i>
+                        &nbsp;一键删除&nbsp;&nbsp;
+                    </a>
+                </div>
+                <div class="panel-body tips">
+                        PS:项目中不存在，数据库中存在的URL
+                </div>
+                <!-- Table -->
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>名称</th>
+                        <th>URL</th>
+                        <th>Code</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in del_rows %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ row.title }}</td>
+                            <td>{{ row.url }}</td>
+                            <td>{{ row.name }}</td>
+                            <td>
+                                <a style="color: #d9534f;font-size: 16px" href="{% memory_url request 'rbac:multi_permissions_del' pk=row.id %}">
+                                    <i class="fa fa-trash-o"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <form action="?type=update" method="post">
+        {% csrf_token %}
+        {{ update_forms.management_form }}
+        <div class="luffy-container">
+        <div class="col-md-12 ">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">
+                    <i class="fa fa-th-list" aria-hidden="true"></i>&nbsp;&nbsp;待更新的权限列表
+                    <button class="right btn btn-xs btn-primary" style="padding: 2px 8px;margin: -3px;">
+                        <i class="fa fa-save" aria-hidden="true"></i>
+                        &nbsp;一键更新&nbsp;&nbsp;
+                    </button>
+                </div>
+                <div class="panel-body tips">
+                        PS:...
+                </div>
+                <!-- Table -->
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>名称</th>
+                        <th>URL</th>
+                        <th>Code</th>
+                        <th>所属菜单</th>
+                        <th>父权限</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for form in update_forms %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            {% for field in form %}
+                                {% if forloop.first %}
+                                    {{ field }}
+                                {% else %}
+                                    <td>{{ field }} <span style="color:red;">{{ field.errors.0 }}</span></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </form>
+
+{% endblock %}
